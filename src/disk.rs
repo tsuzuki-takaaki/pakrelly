@@ -1,13 +1,13 @@
 use std::{
     fs::{File, OpenOptions},
-    io::{self, Seek, Write},
+    io::{self, Read, Seek, Write},
     path::Path,
 };
 
 // page sizeは4KB(4096)で設定
 pub const PAGE_SIZE: usize = 4096;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct PageId(pub u64);
 impl PageId {
     pub fn to_u64(self) -> u64 {
@@ -58,5 +58,12 @@ impl DiskManager {
         // ※ seek単位は4096bytesで、誤差は切り上げられるため、使われていないspaceには NULL が入る
         self.heap_file.seek(io::SeekFrom::Start(offset))?;
         self.heap_file.write_all(data)
+    }
+    pub fn read_page_data(&mut self, page_id: PageId, data: &mut [u8]) -> io::Result<()> {
+        let offset = PAGE_SIZE as u64 * page_id.to_u64();
+        self.heap_file.seek(io::SeekFrom::Start(offset))?;
+        // 読み出し対象のpage idと、buffer(data)を引数に、pageのコンテンツをbufferに対して書き出す
+        // read_exact: Reads the exact number of bytes required to fill buf.
+        self.heap_file.read_exact(data)
     }
 }

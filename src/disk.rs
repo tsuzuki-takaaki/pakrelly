@@ -1,6 +1,6 @@
 use std::{
     fs::{File, OpenOptions},
-    io,
+    io::{self, Seek, Write},
     path::Path,
 };
 
@@ -9,6 +9,11 @@ pub const PAGE_SIZE: usize = 4096;
 
 #[derive(Debug)]
 pub struct PageId(pub u64);
+impl PageId {
+    pub fn to_u64(self) -> u64 {
+        self.0
+    }
+}
 
 // 特定のファイル(heap_file)を、page(4KB)という単位の配列として捉える
 // heap_file = [page0(4KB), page1(4KB), page2(4KB), ...]
@@ -40,9 +45,18 @@ impl DiskManager {
         Self::new(heap_file)
     }
     pub fn allocate_page(&mut self) -> PageId {
+        // TODO: どのタイミングで新規pageを作成するでしょう？
         // 新規でpageを作成して、内部カウンタをインクリメント
         let page_id = self.next_page_id;
         self.next_page_id += 1;
+        // returnするのは現在のpage_id
         PageId(page_id)
+    }
+    pub fn write_page_data(&mut self, page_id: PageId, data: &[u8]) -> io::Result<()> {
+        let offset = PAGE_SIZE as u64 * page_id.to_u64();
+        // heap fileにおいて、次に書き込むべき箇所を特定(page size * page_id)して、その分heap fileの先頭からseekして書き込む
+        // ※ seek単位は4096bytesで、誤差は切り上げられるため、使われていないspaceには NULL が入る
+        self.heap_file.seek(io::SeekFrom::Start(offset))?;
+        self.heap_file.write_all(data)
     }
 }

@@ -6,3 +6,44 @@
 | アクセスメソッド | ディスク上のデータ構造を辿って、結果を返す(B+Treeとか) |
 | バッファプールマネージャ | アクセスメソッドの要求に対してディスク上のデータを貸し出す |
 | ディスクマネージャー | 実際のディスクの読み書き |
+
+## Chapter2(Disk Manger)
+- File I/Oをmanage
+- `page`: File I/Oの最小単位
+    - 4096bytesの整数倍であることが多い
+    - MySQL: 16KB
+        - https://dev.mysql.com/doc/refman/8.0/ja/innodb-physical-structure.html
+    - PostgreSQL: 8KB
+        - https://www.postgresql.org/message-id/3c840f8b-73f0-aae7-6bcf-e22d2a0a6a40%40gusw.net
+    - SQLite: 4KB
+        - https://www.sqlite.org/pgszchng2016.html
+- OSのFileシステムはブロック単位でI/Oを行っていて、それが4096bytesであることがほとんど(?)
+    - https://linux.die.net/man/8/mkfs.ext4
+    - RDBMSアプリケーション側で、pageサイズを4096よりも小さくしたところで、最終的なOSのFile I/Oで切り上げられてしまうため、そっちに合わせるのが無難
+- RustだとこのFile systemを扱っているのが、`std::fs`
+    - これがFile I/Oのsyscallをしてくれるcrate
+    - ちな`std::fs::File`はファイルディスクリプタ
+```rs
+use std::{fs::File, io::Write};
+
+fn main() -> std::io::Result<()> {
+  let mut file = File::create("example.txt")?;
+  file.write_all(b"Hello World\n")?;
+  Ok(())
+}
+```
+```sh
+$ strace -e trace=open,close,read,write ./target/debug/sandbox
+close(3)                                = 0
+read(3, "\177ELF\2\1\1\0\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\0\0\0\0\0\0\0\0"..., 832) = 832
+close(3)                                = 0
+read(3, "\177ELF\2\1\1\3\0\0\0\0\0\0\0\0\3\0>\0\1\0\0\0\220\243\2\0\0\0\0\0"..., 832) = 832
+close(3)                                = 0
+read(3, "636387e28000-636387e2e000 r--p 0"..., 1024) = 1024
+read(3, ":01 6494                       /"..., 1024) = 1024
+read(3, "77c307000 r-xp 00001000 ca:01 64"..., 1024) = 789
+close(3)                                = 0
+write(3, "Hello World\n", 12)           = 12
+close(3)                                = 0
++++ exited with 0 +++
+```

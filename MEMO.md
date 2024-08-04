@@ -47,3 +47,9 @@ write(3, "Hello World\n", 12)           = 12
 close(3)                                = 0
 +++ exited with 0 +++
 ```
+
+## Chapter3(BufferPool Manager)
+- Disk I/Oの遅さを隠蔽するため
+  - Disk I/Oはメモリアクセスに比べるとはるかに遅い(CPUとメモリよりも外側に出るものは基本遅い)
+  - page読み込みごとに毎回Disk Managerを呼び出していると性能が悪いため、BufferPool Managerを使ってメモリ上にキャッシュしておくことで高速化する
+- 1度目のDiskアクセスの際は遅いが、2度目以降はメモリと同程度の速さで読み出せる

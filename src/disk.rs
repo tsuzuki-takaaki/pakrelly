@@ -7,6 +7,9 @@ use std::{
 // page sizeは4KB(4096)で設定
 pub const PAGE_SIZE: usize = 4096;
 
+#[derive(Debug)]
+pub struct PageId(pub u64);
+
 // 特定のファイル(heap_file)を、page(4KB)という単位の配列として捉える
 // heap_file = [page0(4KB), page1(4KB), page2(4KB), ...]
 #[derive(Debug)]
@@ -35,5 +38,11 @@ impl DiskManager {
             .create(true)
             .open(heap_file_path)?;
         Self::new(heap_file)
+    }
+    pub fn allocate_page(&mut self) -> PageId {
+        // 新規でpageを作成して、内部カウンタをインクリメント
+        let page_id = self.next_page_id;
+        self.next_page_id += 1;
+        PageId(page_id)
     }
 }

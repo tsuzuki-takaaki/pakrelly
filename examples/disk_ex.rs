@@ -2,19 +2,18 @@ use pakrelly::disk::{DiskManager, PAGE_SIZE};
 
 fn main() -> std::io::Result<()> {
     let mut disk_manager = DiskManager::open("helloworld")?;
-    println!("{:?}", disk_manager);
-    let page_id_bef = disk_manager.allocate_page();
-    let page_id_aft = disk_manager.allocate_page();
+    let page_id = disk_manager.allocate_page();
 
-    // 2回allocate_pageしているため、4097bytes目から書き込まれる(切り上げられたspaceはNULL)
-    disk_manager.write_page_data(page_id_aft, b"Hello world")?;
+    // Write(常にpage単位で書き込み)
+    let mut buf = Vec::with_capacity(PAGE_SIZE);
+    buf.extend_from_slice(b"Hello World!");
+    buf.resize(PAGE_SIZE, 0);
+    disk_manager.write_page_data(page_id, &buf)?;
 
+    // Read(常にpage単位で読み込み)
     let mut buf = vec![0; PAGE_SIZE];
-    // [CAUTION] Error: Error { kind: UnexpectedEof, message: "failed to fill whole buffer" }
-    // -> 4096bytes読み込もうとしても、fileにそれだけのデータが存在しないと失敗する
-    // 書き込む際に、[0; PAGE_SIZE]にリサイズしてwriteすればいい
-    disk_manager.read_page_data(page_id_bef, &mut buf)?;
-    println!("{:?}", buf);
+    disk_manager.read_page_data(page_id, &mut buf)?;
 
+    println!("{:?}", buf);
     Ok(())
 }

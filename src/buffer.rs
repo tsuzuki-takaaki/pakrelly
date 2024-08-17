@@ -19,7 +19,7 @@ pub enum Error {
     NoFreeBuffer,
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct BufferId(usize);
 // RefCell: データ競合について、コンパイル時ではなく実行時に検査する
 // Cell: 読み取り専用の値の中に書き込み可能な値をつくる
@@ -46,6 +46,7 @@ pub struct Frame {
     usage_count: u64,
     buffer: Rc<Buffer>, // MySQLのような、一つのsessionに対して一つのThreadを割り当てるような設計を実現するためにはRcではなくて、Arcを使う必要が出てくる
 }
+#[derive(Debug)]
 pub struct BufferPool {
     buffers: Vec<Frame>,
     next_victim_id: BufferId, // linked-list
@@ -67,6 +68,15 @@ impl IndexMut<BufferId> for BufferPool {
 // BufferPoolを管理する責務
 // どれだけのbufferをpoolingするかは、initialize(BufferPool::new)時に引数で渡す
 impl BufferPool {
+    pub fn new(pool_size: usize) -> Self {
+        let mut buffers = vec![];
+        buffers.resize_with(pool_size, Default::default);
+        let next_victim_id = BufferId::default();
+        Self {
+            buffers,
+            next_victim_id,
+        }
+    }
     fn size(&self) -> usize {
         self.buffers.len()
     }
@@ -109,6 +119,7 @@ impl BufferPool {
 
 // 実際のPageData供給layer(BufferPoolとDiskを両方みて、BufferPoolにあればそこから、なければDiskから取ってきてよしなに供給する責務)
 // poolを見に行って、あれば使い、なければDiskManager越しにDisk I/O
+#[derive(Debug)]
 pub struct BufferPoolManager {
     disk: DiskManager,
     pool: BufferPool,
@@ -116,6 +127,14 @@ pub struct BufferPoolManager {
 }
 
 impl BufferPoolManager {
+    pub fn new(disk: DiskManager, pool: BufferPool) -> Self {
+        let page_table = HashMap::new();
+        Self {
+            disk,
+            pool,
+            page_table,
+        }
+    }
     // Pageの実データを返す(Frame.buffer)
     fn fetch_page(&mut self, page_id: PageId) -> Result<Rc<Buffer>, Error> {
         // BufferPoolに必要なpageが存在する場合(HashMapで持っているpage_tableを探索)

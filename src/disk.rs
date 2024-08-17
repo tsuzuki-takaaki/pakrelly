@@ -7,7 +7,7 @@ use std::{
 // page sizeは4KB(4096)で設定
 pub const PAGE_SIZE: usize = 4096;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct PageId(pub u64);
 impl PageId {
     pub fn to_u64(self) -> u64 {

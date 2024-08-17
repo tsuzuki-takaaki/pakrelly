@@ -23,14 +23,25 @@ pub enum Error {
 pub struct BufferId(usize);
 // RefCell: データ競合について、コンパイル時ではなく実行時に検査する
 // Cell: 読み取り専用の値の中に書き込み可能な値をつくる
+#[derive(Debug)]
 pub struct Buffer {
     pub page_id: PageId,
     pub page: RefCell<Page>,
     pub is_dirty: Cell<bool>, // BufferでPageに対してWriteした場合、is_dirtyをフラグとしてもつ(Diskに戻す時に整合性を取るため)
 }
+impl Default for Buffer {
+    fn default() -> Self {
+        Self {
+            page_id: Default::default(),
+            page: RefCell::new([0u8; PAGE_SIZE]),
+            is_dirty: Cell::new(false),
+        }
+    }
+}
 // Bufferに対するpointer + metadata(usage_countはそのbufferがどれだけ使われたかを持つ)
 // Rc: 対象のデータへの参照の数を実行時にtrackingする. カウントが0になってどこからも利用されてないことがわかったら対象のメモリ領域を自動で解放する
 //     Rc::cloneをすることによって、対象に対するReference counterがincrementされる
+#[derive(Debug, Default)]
 pub struct Frame {
     usage_count: u64,
     buffer: Rc<Buffer>, // MySQLのような、一つのsessionに対して一つのThreadを割り当てるような設計を実現するためにはRcではなくて、Arcを使う必要が出てくる

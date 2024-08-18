@@ -137,6 +137,7 @@ impl BufferPoolManager {
     }
     // Pageの実データを返す(Frame.buffer)
     pub fn fetch_page(&mut self, page_id: PageId) -> Result<Rc<Buffer>, Error> {
+        dbg!(page_id);
         // BufferPoolに必要なpageが存在する場合(HashMapで持っているpage_tableを探索)
         if let Some(&buffer_id) = self.page_table.get(&page_id) {
             let frame = &mut self.pool[buffer_id];

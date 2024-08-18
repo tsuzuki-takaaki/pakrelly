@@ -82,6 +82,32 @@ close(3)                                = 0
   - 古いノードの最小値を親のinternal nodeの新しい分割キーにする(ポインタで辿れるようにする)
 - B+Treeを実装するとなると、かなり時間がかかるので、使い方と特性に焦点を当てて、B+Treeを**使う**コードを書いて動かしながら理解を進める
 
+## Chapter5(テーブルの実装)
+- Clustered index
+  - テーブル自体をB+Treeに格納してしまう手法
+  - -> DBそれ自体がB+Treeでできている
+  - InnoDBとかはこれ
+- Secondary index
+  - 「indexを作る・張る」の文脈で使われているindexはSecondary indexのこと
+- `テーブル`: 行と列からなるもの
+- `B+Tree`: key-valueデータ格納に優れいているもの
+- ↑ の2つをどうやって統合するか？
+  - primary keyとそれ以外に分ける
+ex(image)
+```ruby
+a = {id: 1, name: "hello", age: 30}
+b = {id: 2, name: "world", age: 20}
+
+↓
+
+a = {key: 1, value: ["hello", 30]}
+b = {key: 2, value: ["world", 20]}
+```
+- schema
+  - 各列の名前・型やどの列がプライマリーキーなのかなど、`CREATE TABLE`文で指定するような内容のこと
+- 今回は、データ型は可変長のバイト列だけ
+  - プライマリーキーは左に寄せることで統一する
+
 ### 🫛
 - flush
   - [File#flush](https://doc.rust-lang.org/std/fs/struct.File.html#method.flush)

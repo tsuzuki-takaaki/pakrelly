@@ -1,4 +1,5 @@
 mod leaf;
+mod meta;
 
 use bincode::Options;
 use serde::{Deserialize, Serialize};

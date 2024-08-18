@@ -171,7 +171,6 @@ impl BufferPoolManager {
         self.page_table.insert(page_id, buffer_id);
         Ok(page)
     }
-
     // 既存のPageをfetchするのではなく、そもそもPage作成から行う
     pub fn create_page(&mut self) -> Result<Rc<Buffer>, Error> {
         let buffer_id = self.pool.evict().ok_or(Error::NoFreeBuffer)?;
@@ -194,5 +193,16 @@ impl BufferPoolManager {
         self.page_table.remove(&evict_page_id);
         self.page_table.insert(page_id, buffer_id);
         Ok(page)
+    }
+    // bufferingされっぱなしのデータを強制的にdisk writeする
+    pub fn flush(&mut self) -> Result<(), Error> {
+        for (&page_id, &buffer_id) in self.page_table.iter() {
+            let frame = &self.pool[buffer_id];
+            let mut page = frame.buffer.page.borrow_mut();
+            self.disk.write_page_data(page_id, page.as_mut())?;
+            frame.buffer.is_dirty.set(false);
+        }
+        self.disk.sync()?;
+        Ok(())
     }
 }

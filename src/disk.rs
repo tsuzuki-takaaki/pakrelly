@@ -97,4 +97,8 @@ impl DiskManager {
         // read_exact: Reads the exact number of bytes required to fill buf.
         self.heap_file.read_exact(data)
     }
+    pub fn sync(&mut self) -> io::Result<()> {
+        self.heap_file.flush()?;
+        self.heap_file.sync_all()
+    }
 }

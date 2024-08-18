@@ -3,13 +3,25 @@ use std::{
     io::{self, Read, Seek, Write},
     path::Path,
 };
+use zerocopy::{AsBytes, FromBytes};
 
 // page sizeは4KB(4096)で設定
 pub const PAGE_SIZE: usize = 4096;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, FromBytes, AsBytes)]
+#[repr(C)]
 pub struct PageId(pub u64);
 impl PageId {
+    pub const INVALID_PAGE_ID: PageId = PageId(u64::MAX);
+
+    pub fn valid(self) -> Option<PageId> {
+        if self == Self::INVALID_PAGE_ID {
+            None
+        } else {
+            Some(self)
+        }
+    }
+
     pub fn to_u64(self) -> u64 {
         self.0
     }

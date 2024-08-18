@@ -81,3 +81,9 @@ close(3)                                = 0
   - 移して空いた領域に書き込み
   - 古いノードの最小値を親のinternal nodeの新しい分割キーにする(ポインタで辿れるようにする)
 - B+Treeを実装するとなると、かなり時間がかかるので、使い方と特性に焦点を当てて、B+Treeを**使う**コードを書いて動かしながら理解を進める
+
+### 🫛
+- flush
+  - [File#flush](https://doc.rust-lang.org/std/fs/struct.File.html#method.flush)
+    - > Flushes the file, ensuring that all intermediately buffered contents reach their destination.
+    - buffering状態で止まっているものをdisk writeする

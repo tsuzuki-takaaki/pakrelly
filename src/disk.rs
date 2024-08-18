@@ -8,7 +8,7 @@ use zerocopy::{AsBytes, FromBytes};
 // page sizeは4KB(4096)で設定
 pub const PAGE_SIZE: usize = 4096;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, FromBytes, AsBytes)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, FromBytes, AsBytes)]
 #[repr(C)]
 pub struct PageId(pub u64);
 impl PageId {
@@ -24,6 +24,25 @@ impl PageId {
 
     pub fn to_u64(self) -> u64 {
         self.0
+    }
+}
+
+impl Default for PageId {
+    fn default() -> Self {
+        Self::INVALID_PAGE_ID
+    }
+}
+
+impl From<Option<PageId>> for PageId {
+    fn from(page_id: Option<PageId>) -> Self {
+        page_id.unwrap_or_default()
+    }
+}
+
+impl From<&[u8]> for PageId {
+    fn from(bytes: &[u8]) -> Self {
+        let arr = bytes.try_into().unwrap();
+        PageId(u64::from_ne_bytes(arr))
     }
 }
 

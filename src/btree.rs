@@ -1,3 +1,4 @@
+mod branch;
 mod leaf;
 mod meta;
 
